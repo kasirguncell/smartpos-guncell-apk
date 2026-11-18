@@ -92,19 +92,12 @@ public class MainActivity extends AppCompatActivity {
                         if (n.contains("VSC") || n.contains("MP") || n.contains("RPP") || n.contains("POS") || n.contains("PRINTER") || n.contains("MTP")) { target = dev; break; }
                     }
                     if (target == null && !paired.isEmpty()) target = paired.iterator().next();
-                    if (target == null) { toast("Pair printer VSC 58mm di Bluetooth HP dulu!"); return;
+                    if (target == null) { toast("Pair printer VSC 58mm di Bluetooth HP dulu!"); return; }
                     byte[] bytes = Base64.decode(base64Data, Base64.DEFAULT);
                     socket = target.createRfcommSocketToServiceRecord(SPP_UUID);
                     socket.connect();
                     OutputStream os = socket.getOutputStream();
-                    int chunkSize = 256;
-                    for (int i = 0; i < bytes.length; i += chunkSize) {
-                        int len = Math.min(chunkSize, bytes.length - i);
-                        os.write(bytes, i, len);
-                        os.flush();
-                        Thread.sleep(20);
-                    }
-                    Thread.sleep(900);
+                    for (int i = 0; i < bytes.length; i += 256) { os.write(bytes, i, Math.min(256, bytes.length - i)); os.flush(); Thread.sleep(20); } Thread.sleep(900);
                 } catch (Exception e) {
                     toast("Gagal cetak: " + e.getMessage());
                 } finally {

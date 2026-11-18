@@ -24,8 +24,8 @@ jobs:
       - name: Publish Public Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0
-          name: Kasir GUN CELL v1.0
+          tag_name: v1.1
+          name: Kasir GUN CELL v1.1
           draft: false
           prerelease: false
           body: Aplikasi resmi kasir SmartPOS GUN CELL. Klik file Kasir-GUN-CELL.apk di bagian Assets di bawah ini untuk mengunduh.
