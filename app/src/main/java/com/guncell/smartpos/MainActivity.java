@@ -25,6 +25,8 @@ import androidx.core.app.ActivityCompat;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private static final String POS_URL = "https://kasir.guncell.my.id";
@@ -69,10 +71,12 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl(POS_URL);
     }
 
+    private final ExecutorService printExecutor = Executors.newSingleThreadExecutor();
+
     public class BluetoothPrinterBridge {
         @JavascriptInterface
         public void printBase64(final String base64Data) {
-            new Thread(() -> {
+            printExecutor.execute(() -> {
                 BluetoothSocket socket = null;
                 try {
                     BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -88,18 +92,25 @@ public class MainActivity extends AppCompatActivity {
                         if (n.contains("VSC") || n.contains("MP") || n.contains("RPP") || n.contains("POS") || n.contains("PRINTER") || n.contains("MTP")) { target = dev; break; }
                     }
                     if (target == null && !paired.isEmpty()) target = paired.iterator().next();
-                    if (target == null) { toast("Pair printer VSC 58mm di Bluetooth HP dulu!"); return; }
+                    if (target == null) { toast("Pair printer VSC 58mm di Bluetooth HP dulu!"); return;
                     byte[] bytes = Base64.decode(base64Data, Base64.DEFAULT);
                     socket = target.createRfcommSocketToServiceRecord(SPP_UUID);
                     socket.connect();
                     OutputStream os = socket.getOutputStream();
-                    os.write(bytes); os.flush(); Thread.sleep(350);
+                    int chunkSize = 256;
+                    for (int i = 0; i < bytes.length; i += chunkSize) {
+                        int len = Math.min(chunkSize, bytes.length - i);
+                        os.write(bytes, i, len);
+                        os.flush();
+                        Thread.sleep(20);
+                    }
+                    Thread.sleep(900);
                 } catch (Exception e) {
                     toast("Gagal cetak: " + e.getMessage());
                 } finally {
                     try { if (socket != null) socket.close(); } catch (Exception ignored) {}
                 }
-            }).start();
+            });
         }
     }
 
